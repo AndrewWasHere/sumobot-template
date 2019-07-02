@@ -1,0 +1,7 @@
+@startuml
+state PongStateMachine {
+    [*] --> Init
+    Init --> Standby : start button
+    Standby : on entry / start timer(5000 ms)
+}
+@enduml
