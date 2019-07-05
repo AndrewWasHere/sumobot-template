@@ -16,7 +16,7 @@ class RobotState : public State
 {
 public:
     RobotState(char const * name, State * parent, IRobot & robot);
-    Result transition_to_state(State * state) override;
+    Result transition_to_state(State & state) override;
 
 protected:
     bool on_event(Event & event) override;

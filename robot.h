@@ -71,28 +71,28 @@ private:
     //          50:1  4                                  
     //          75:1  6                                  
     //         100:1  8                                  
-    long const encoder_counts_per_degree_rotation = 4;
+    long const m_encoder_counts_per_degree_rotation = 4;
 
     Boundary boundary_detect();
 
     // Robot I/O interfaces. Uncomment those used. Comment out those not used.
     // Also check IRobot::setup() for calls to `init()` functions to be
     // enabled/disabled.
-//    L3G gyro;
-    LSM303 accelerometer;
-//    Zumo32U4ButtonA a_button;
-    Zumo32U4ButtonB start_button;
-//    Zumo32U4ButtonC c_button;
-//    Zumo32U4Buzzer buzzer;
-    Zumo32U4Encoders encoders;
-//    Zumo32U4IRPulses ir_emitters;
-    Zumo32U4LCD lcd;
-    Zumo32U4LineSensors boundary_sensor;
-    Zumo32U4Motors motors;
-    Zumo32U4ProximitySensors proximity_sensors;
+//    L3G m_gyro;
+    LSM303 m_accelerometer;
+//    Zumo32U4ButtonA m_a_button;
+    Zumo32U4ButtonB m_start_button;
+//    Zumo32U4ButtonC m_c_button;
+//    Zumo32U4Buzzer m_buzzer;
+    Zumo32U4Encoders m_encoders;
+//    Zumo32U4IRPulses m_ir_emitters;
+    Zumo32U4LCD m_lcd;
+    Zumo32U4LineSensors m_boundary_sensor;
+    Zumo32U4Motors m_motors;
+    Zumo32U4ProximitySensors m_proximity_sensors;
 
     // Timer "register". Use `start_timer()` to set.
-    unsigned long end_time;
+    unsigned long m_end_time;
     // Encoder "register". Use `turn_left()` or `turn_right()` to set.
-    long encoder_count;
+    long m_encoder_count;
 };

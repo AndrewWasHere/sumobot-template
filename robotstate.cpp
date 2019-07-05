@@ -13,7 +13,7 @@ RobotState::RobotState(char const * name, State * parent, IRobot & robot) :
 {
 }
 
-Result RobotState::transition_to_state(State * state)
+Result RobotState::transition_to_state(State & state)
 {
     Result r = State::transition_to_state(state);
     m_robot.display(active_state_name());

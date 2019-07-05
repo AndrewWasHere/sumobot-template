@@ -4,68 +4,112 @@
     This source code is released under the 3-Clause BSD license. See 
     LICENSE.txt, or https://opensource.org/licenses/BSD-3-Clause.
  */
+#include "events.h"
 #include "robot.h"
 
-extern StartButtonEvent start_event;
-extern TimerEvent timer_event;
-extern BoundaryAheadEvent boundary_ahead_event;
-extern BoundaryLeftEvent boundary_left_event;
-extern BoundaryRightEvent boundary_right_event;
-extern EncoderEvent encoder_event;
+// Events.
+
+BoundaryEvent boundary_event;
+EncoderEvent encoder_event;
+StartButtonEvent start_event;
+TimerEvent timer_event;
+ProximityEvent proximity_event;
+
+// IRobot methods.
 
 void IRobot::setup()
 {
-    end_time = 0;
-    encoder_count = 0;
-
-    // Set up gyro.
-//    gyro.init();
+    m_end_time = 0;
+    m_encoder_count = 0;
 
     // Set up accelerometer.
-    accelerometer.init();
+    m_accelerometer.init();
 
     // Set up line sensors.
-    boundary_sensor.initThreeSensors();
+    m_boundary_sensor.initThreeSensors();
 
-    // Set up proximity sensors. Choose one, or call init() with arguments.
-//    proximity_sensors.initFrontSensor();
-    proximity_sensors.initThreeSensors();
+    // Set up gyro.
+//    m_gyro.init();
+
+    // Set up proximity sensors.
+    m_proximity_sensors.initFrontSensor();
 }
 
 void IRobot::generate_events(EventQueue & q)
 {
     // Check start button.
-    if (start_button.getSingleDebouncedPress())
+    if (m_start_button.getSingleDebouncedPress())
     {
         q.push(&start_event);
     }
 
     // Check timer.
-    if (end_time && millis() >= end_time)
+    if (m_end_time && millis() >= m_end_time)
     {
         q.push(&timer_event);
-        end_time = 0;
+        m_end_time = 0;
     }
 
     // Check boundary sensors.
     switch(boundary_detect())
     {
     case BOUNDARY_AHEAD:
-        q.push(&boundary_ahead_event);
+        boundary_event.m_direction = AHEAD;
+        q.push(&boundary_event);
         break;
     case BOUNDARY_LEFT:
-        q.push(&boundary_left_event);
+        boundary_event.m_direction = LEFT;
+        q.push(&boundary_event);
         break;
     case BOUNDARY_RIGHT:
-        q.push(&boundary_right_event);
+        boundary_event.m_direction = RIGHT;
+        q.push(&boundary_event);
+        break;
+    default:
+        boundary_event.m_direction = NONE;
+        // Do not push event onto queue.
         break;
     }
 
     // Check encoders.
-    if (encoder_count && abs(encoders.getCountsLeft()) > encoder_count)
+    if (m_encoder_count && abs(encoders.getCountsLeft()) > m_encoder_count)
     {
         q.push(&encoder_event);
-        encoder_count = 0;
+        m_encoder_count = 0;
+    }
+
+    // Check proximity sensor.
+    uint8_t const proximity_threshold = 1;
+    proximity_sensors.read();
+    uint8_t brightness_left = proximity_sensors.countsFrontWithLeftLeds();
+    uint8_t brightness_right = proximity_sensors.countsFrontWithRightLeds();
+    if (
+        brightness_left >= proximity_threshold || 
+        brightness_right >= proximity_threshold
+    )
+    {
+        // Object detected.
+        if (brightness_left > brightness_right)
+        {
+            proximity_event.m_direction = LEFT;
+            q.push(&proximity_event);
+        }
+        else if (brightness_right > brightness_left)
+        {
+            proximity_event.m_direction = RIGHT;
+            q.push(&proximity_event);
+        }
+        else
+        {
+            proximity_event.m_direction = AHEAD;
+            q.push(&proximity_event);
+        }
+        */
+    }
+    else
+    {
+        proximity_event.m_direction = NONE;
+        q.push(&proximity_event);
     }
 }
 
@@ -80,12 +124,12 @@ void IRobot::display(char const * msg)
 
 void IRobot::cancel_timer()
 {
-    end_time = 0;
+    m_end_time = 0;
 }
 
 void IRobot::start_timer(unsigned long timeout)
 {
-    end_time = millis() + timeout;
+    m_end_time = millis() + timeout;
 }
 
 void IRobot::move_forward(int speed)
@@ -100,21 +144,21 @@ void IRobot::move_stop()
 
 void IRobot::rotate_left(long degrees, int speed)
 {
-    encoder_count = degrees * encoder_counts_per_degree_rotation;
+    m_encoder_count = degrees * m_encoder_counts_per_degree_rotation;
     encoders.getCountsAndResetLeft();
     motors.setSpeeds(-speed, speed);
 }
 
 void IRobot::rotate_right(long degrees, int speed)
 {
-    encoder_count = degrees * encoder_counts_per_degree_rotation;
+    m_encoder_count = degrees * m_encoder_counts_per_degree_rotation;
     encoders.getCountsAndResetLeft();
     motors.setSpeeds(speed, -speed);
 }
 
 void IRobot::cancel_encoder()
 {
-    encoder_count = 0;
+    m_encoder_count = 0;
 }
 
 //

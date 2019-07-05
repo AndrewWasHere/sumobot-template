@@ -11,14 +11,24 @@
 using namespace statemachine;
 
 // There must be one event enumerated value for each event class.
-enum PongEvent
+enum RobotEvent
 {
     START_EVENT,
     TIMER_EVENT,
     BOUNDARY_AHEAD_EVENT,
     BOUNDARY_LEFT_EVENT,
     BOUNDARY_RIGHT_EVENT,
-    ENCODER_EVENT
+    ENCODER_EVENT,
+    PROXIMITY_EVENT
+};
+
+// Direction of detection. Used by boundary and proximity sensors.
+enum DetectDirection
+{
+    NONE,
+    LEFT,
+    AHEAD,
+    RIGHT
 };
 
 // Start button pressed.
@@ -35,25 +45,13 @@ public:
     TimerEvent() : Event(TIMER_EVENT, "timer") {}
 };
 
-// Ring boundary detected to front of robot.
-class BoundaryAheadEvent : public Event
+// Ring boundary detected.
+class BoundaryEvent : public Event
 {
 public:
-    BoundaryAheadEvent() : Event(BOUNDARY_AHEAD_EVENT, "bdy-a") {}
-};
+    BoundaryEvent() : Event(BOUNDARY_EVENT, "bdy"), m_direction(NONE) {}
 
-// Ring boundary detected to left of robot.
-class BoundaryLeftEvent : public Event
-{
-public:
-    BoundaryLeftEvent() : Event(BOUNDARY_LEFT_EVENT, "bdy-l") {}
-};
-
-// Ring boundary detected to right of robot.
-class BoundaryRightEvent : public Event
-{
-public:
-    BoundaryRightEvent() : Event(BOUNDARY_RIGHT_EVENT, "bdy-r") {}
+    DetectDirection m_direction;
 };
 
 // Wheel encoder has spun desired amount.
@@ -61,4 +59,20 @@ class EncoderEvent : public Event
 {
 public:
     EncoderEvent() : Event(ENCODER_EVENT, "enc") {}
+};
+
+// Proximity sensor detection.
+class ProximityEvent : public Event
+{
+public:
+    ProximityEvent() : 
+        Event(PROXIMITY_EVENT, "prox"), 
+        m_direction(NONE), 
+        m_left_brightness(0), 
+        m_right_brightness(0) 
+    {}
+    
+    DetectDirection m_direction;
+    uint8_t m_left_brightness;
+    uint8_t m_right_brightness;
 };

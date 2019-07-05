@@ -15,5 +15,5 @@ RobotStateMachine::RobotStateMachine(State * parent, IRobot & robot) :
 
 Result RobotStateMachine::on_initialize()
 {
-    return transition_to_state(&initialized);
+    return transition_to_state(initialized);
 }

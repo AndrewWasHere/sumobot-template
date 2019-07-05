@@ -24,14 +24,6 @@ RobotStateMachine machine(nullptr, robot);
 InitState initialized(&machine, robot);
 StandbyState standby(&machine, robot);
 
-// Events.
-StartButtonEvent start_event;
-TimerEvent timer_event;
-BoundaryAheadEvent boundary_ahead_event;
-BoundaryLeftEvent boundary_left_event;
-BoundaryRightEvent boundary_right_event;
-EncoderEvent encoder_event;
-
 EventQueue queue;
 
 void setup()
@@ -40,7 +32,7 @@ void setup()
     robot.setup();
 
     // Initialize state machine.
-    machine.transition_to_state(&machine);
+    machine.transition_to_state(machine);
 }
 
 void loop()

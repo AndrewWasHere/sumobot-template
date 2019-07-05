@@ -8,16 +8,21 @@
 
 namespace statemachine
 {
+    Event::Event(int const id, char const * name) :
+        m_id(id),
+        m_name(name)
+    {}
+
     State::State(char const * name, State * parent) :
         m_name(name),
         m_active_state(nullptr),
         m_parent_state(parent)
     {}
 
-    Result State::transition_to_state(State * state)
+    Result State::transition_to_state(State & state)
     {
         State * s = active_state();
-        State * common_parent = s->find_common_parent(state);
+        State * common_parent = s->find_common_parent(&state);
 
         if (!common_parent)
         {
@@ -32,8 +37,8 @@ namespace statemachine
         }
 
         // Update active state pointers from common parent to `state`.
-        state->m_active_state = nullptr;
-        for (s = state; s != common_parent; s = s->m_parent_state)
+        state.m_active_state = nullptr;
+        for (s = &state; s != common_parent; s = s->m_parent_state)
         {
             s->m_parent_state->m_active_state = s;
         }
@@ -44,27 +49,29 @@ namespace statemachine
             s->on_entry();
         }
 
-        return state->on_initialize();
+        return state.on_initialize();
     }
 
-    Result State::transition_to_history(State * state)
+    Result State::transition_to_history(State & state)
     {
         // Follow new state's active state history down one sub-state.
-        if (state->m_active_state) 
+        State * s = &state;
+        if (s->m_active_state) 
         {
-            state = state->m_active_state;
+            s = s->m_active_state;
         }
-        return transition_to_state(state);
+        return transition_to_state(*s);
     }
 
-    Result State::transition_to_deep_history(State * state)
+    Result State::transition_to_deep_history(State & state)
     {
         // Follow new state's active state history all the way down.
-        while (state->m_active_state)
+        State * s = &state;
+        while (s->m_active_state)
         {
-            state = state->m_active_state;
+            s = s->m_active_state;
         }
-        return transition_to_state(state);
+        return transition_to_state(*s);
     }
 
     Result State::handle_event(Event & event)
@@ -132,22 +139,38 @@ namespace statemachine
 
     State * State::find_common_parent(State * other)
     {
-        if (other)
+        if (!other)
         {
-            for (State * l = this; l; l = l->m_parent_state)
+            // `other` is not a valid pointer.
+            return nullptr;
+        }
+
+        if (
+            other == this &&
+            this->m_parent_state == nullptr &&
+            other->m_parent_state == nullptr
+        )
+        {
+            // This state and `other` state are the root machine state.
+            return this;
+        }
+
+        // States for comparison are this state all the way to the root state
+        // machine state.
+        for (State * l = this; l; l = l->m_parent_state)
+        {
+            // Compare parents of `other` to `l`.
+            for
+            (
+                State * r = other->m_parent_state;
+                r;
+                r = r->m_parent_state
+            )
             {
-                for
-                (
-                    State * r = other->m_parent_state;
-                    r;
-                    r = r->m_parent_state
-                )
+                if (r == l)
                 {
-                    if (r == l)
-                    {
-                        // Common parent found.
-                        return r;
-                    }
+                    // Common parent found.
+                    return r;
                 }
             }
         }
