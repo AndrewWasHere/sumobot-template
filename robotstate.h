@@ -20,12 +20,11 @@ public:
 
 protected:
     bool on_event(Event & event) override;
+    virtual bool on_event(BoundaryEvent & event);
+    virtual bool on_event(EncoderEvent & event);
+    virtual bool on_event(ProximityEvent & event);
     virtual bool on_event(StartButtonEvent & event);
     virtual bool on_event(TimerEvent & event);
-    virtual bool on_event(BoundaryAheadEvent & event);
-    virtual bool on_event(BoundaryLeftEvent & event);
-    virtual bool on_event(BoundaryRightEvent & event);
-    virtual bool on_event(EncoderEvent & event);
     
     IRobot & m_robot;
 };

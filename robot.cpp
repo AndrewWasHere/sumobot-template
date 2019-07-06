@@ -15,6 +15,25 @@ StartButtonEvent start_event;
 TimerEvent timer_event;
 ProximityEvent proximity_event;
 
+// Static helper functions.
+
+static int16_t clip_speed(int16_t speed)
+{
+    int16_t const max_speed = 400;
+    int16_t const min_speed = -max_speed;
+
+    if (speed > max_speed)
+    {
+        speed = max_speed;
+    }
+    else if (speed < min_speed)
+    {
+        speed = min_speed;
+    }
+
+    return speed;
+}
+
 // IRobot methods.
 
 void IRobot::setup()
@@ -72,7 +91,7 @@ void IRobot::generate_events(EventQueue & q)
     }
 
     // Check encoders.
-    if (m_encoder_count && abs(encoders.getCountsLeft()) > m_encoder_count)
+    if (m_encoder_count && abs(m_encoders.getCountsLeft()) > m_encoder_count)
     {
         q.push(&encoder_event);
         m_encoder_count = 0;
@@ -80,9 +99,9 @@ void IRobot::generate_events(EventQueue & q)
 
     // Check proximity sensor.
     uint8_t const proximity_threshold = 1;
-    proximity_sensors.read();
-    uint8_t brightness_left = proximity_sensors.countsFrontWithLeftLeds();
-    uint8_t brightness_right = proximity_sensors.countsFrontWithRightLeds();
+    m_proximity_sensors.read();
+    uint8_t brightness_left = m_proximity_sensors.countsFrontWithLeftLeds();
+    uint8_t brightness_right = m_proximity_sensors.countsFrontWithRightLeds();
     if (
         brightness_left >= proximity_threshold || 
         brightness_right >= proximity_threshold
@@ -104,7 +123,6 @@ void IRobot::generate_events(EventQueue & q)
             proximity_event.m_direction = AHEAD;
             q.push(&proximity_event);
         }
-        */
     }
     else
     {
@@ -113,13 +131,10 @@ void IRobot::generate_events(EventQueue & q)
     }
 }
 
-//
-// State Machine Interfaces
-//
 void IRobot::display(char const * msg)
 {
-    lcd.clear();
-    lcd.write(msg, strlen(msg));
+    m_lcd.clear();
+    m_lcd.write(msg, strlen(msg));
 }
 
 void IRobot::cancel_timer()
@@ -127,33 +142,65 @@ void IRobot::cancel_timer()
     m_end_time = 0;
 }
 
-void IRobot::start_timer(unsigned long timeout)
+void IRobot::start_timer(unsigned long timeout_in_ms)
 {
-    m_end_time = millis() + timeout;
+    m_end_time = millis() + timeout_in_ms;
+    if (m_end_time == 0)
+    {
+        // End time cannot be zero, because event won't trigger.
+        m_end_time = 1;
+    }
 }
 
-void IRobot::move_forward(int speed)
+void IRobot::change_speed_by(int16_t delta)
 {
-    motors.setSpeeds(speed, speed);
+    m_left_motor_speed = clip_speed(m_left_motor_speed + delta);
+    m_right_motor_speed = clip_speed(m_right_motor_speed + delta);
+    m_motors.setSpeeds(m_left_motor_speed, m_right_motor_speed);
 }
 
-void IRobot::move_stop()
+void IRobot::change_speed_by(int16_t left_delta, int16_t right_delta)
 {
-    motors.setSpeeds(0, 0);
+    m_left_motor_speed = clip_speed(m_left_motor_speed + left_delta);
+    m_right_motor_speed = clip_speed(m_right_motor_speed + right_delta);
+    m_motors.setSpeeds(m_left_motor_speed, m_right_motor_speed);
 }
 
-void IRobot::rotate_left(long degrees, int speed)
+void IRobot::move(int16_t speed)
 {
+    m_left_motor_speed = m_right_motor_speed = clip_speed(speed);
+    m_motors.setSpeeds(m_left_motor_speed, m_right_motor_speed);
+}
+
+void IRobot::move(int16_t left_speed, int16_t right_speed)
+{
+    m_left_motor_speed = clip_speed(left_speed);
+    m_right_motor_speed = clip_speed(right_speed);
+    m_motors.setSpeeds(m_left_motor_speed, m_right_motor_speed);
+}
+
+void IRobot::stop()
+{
+    m_left_motor_speed = m_right_motor_speed = 0;
+    m_motors.setSpeeds(m_left_motor_speed, m_right_motor_speed);
+}
+
+void IRobot::spin_left(int16_t degrees, int16_t speed)
+{
+    m_left_motor_speed = clip_speed(-speed);
+    m_right_motor_speed = clip_speed(speed);
     m_encoder_count = degrees * m_encoder_counts_per_degree_rotation;
-    encoders.getCountsAndResetLeft();
-    motors.setSpeeds(-speed, speed);
+    m_encoders.getCountsAndResetLeft();
+    m_motors.setSpeeds(m_left_motor_speed, m_right_motor_speed);
 }
 
-void IRobot::rotate_right(long degrees, int speed)
+void IRobot::spin_right(int16_t degrees, int16_t speed)
 {
+    m_left_motor_speed = clip_speed(speed);
+    m_right_motor_speed = clip_speed(-speed);
     m_encoder_count = degrees * m_encoder_counts_per_degree_rotation;
-    encoders.getCountsAndResetLeft();
-    motors.setSpeeds(speed, -speed);
+    m_encoders.getCountsAndResetLeft();
+    m_motors.setSpeeds(m_left_motor_speed, m_right_motor_speed);
 }
 
 void IRobot::cancel_encoder()
@@ -171,7 +218,7 @@ Boundary IRobot::boundary_detect()
     const unsigned int threshold = 250;
 
     unsigned int sensor_values[3];
-    boundary_sensor.read(sensor_values);
+    m_boundary_sensor.read(sensor_values);
     bool left_boundary = sensor_values[0] < threshold;
     bool center_boundary = sensor_values[1] < threshold;
     bool right_boundary = sensor_values[2] < threshold;

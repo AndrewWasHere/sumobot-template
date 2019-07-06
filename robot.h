@@ -28,14 +28,22 @@ public:
     // Call at the beginning of `loop()` to generate state machine events.
     void generate_events(EventQueue & q);
     
-    // State machine interfaces.
+    // User feedback.
     void display(char const * msg);
+
+    // Timer interfaces.
     void cancel_timer();
-    void start_timer(unsigned long timeout);
-    void move_forward(int speed);
-    void move_stop();
-    void rotate_left(long degrees, int speed);
-    void rotate_right(long degrees, int speed);
+    void start_timer(unsigned long timeout_in_ms);
+
+    // Motor interfaces.
+    // Note: motor speed is not linear!
+    void change_speed_by(int16_t delta);
+    void change_speed_by(int16_t left_delta, int16_t right_delta);
+    void move(int16_t speed);
+    void move(int16_t left_speed, int16_t right_speed);
+    void stop();
+    void spin_left(int16_t degrees, int16_t speed);
+    void spin_right(int16_t degrees, int16_t speed);
     void cancel_encoder();
 
 private:
@@ -71,7 +79,7 @@ private:
     //          50:1  4                                  
     //          75:1  6                                  
     //         100:1  8                                  
-    long const m_encoder_counts_per_degree_rotation = 4;
+    int16_t const m_encoder_counts_per_degree_rotation = 4;
 
     Boundary boundary_detect();
 
@@ -91,8 +99,13 @@ private:
     Zumo32U4Motors m_motors;
     Zumo32U4ProximitySensors m_proximity_sensors;
 
-    // Timer "register". Use `start_timer()` to set.
+    // Timer "register". Use `start_timer()` to set, `cancel_timer()` to clear.
     unsigned long m_end_time;
-    // Encoder "register". Use `turn_left()` or `turn_right()` to set.
-    long m_encoder_count;
+    
+    // Encoder "register". Use `spin_left()` or `spin_right()` to set.
+    int16_t m_encoder_count;
+
+    // Motor speeds.
+    int16_t m_left_motor_speed;
+    int16_t m_right_motor_speed;
 };

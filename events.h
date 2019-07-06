@@ -6,6 +6,7 @@
  */
 #pragma once
 
+#include <Zumo32U4.h>
 #include "statemachine.h"
 
 using namespace statemachine;
@@ -13,13 +14,11 @@ using namespace statemachine;
 // There must be one event enumerated value for each event class.
 enum RobotEvent
 {
-    START_EVENT,
-    TIMER_EVENT,
-    BOUNDARY_AHEAD_EVENT,
-    BOUNDARY_LEFT_EVENT,
-    BOUNDARY_RIGHT_EVENT,
+    BOUNDARY_EVENT,
     ENCODER_EVENT,
-    PROXIMITY_EVENT
+    PROXIMITY_EVENT,
+    START_EVENT,
+    TIMER_EVENT
 };
 
 // Direction of detection. Used by boundary and proximity sensors.

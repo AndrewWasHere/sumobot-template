@@ -26,28 +26,40 @@ bool RobotState::on_event(Event & event)
 
     switch(event.m_id)
     {
+        case BOUNDARY_EVENT:
+            handled = on_event(static_cast<BoundaryEvent &>(event));
+            break;
+        case ENCODER_EVENT:
+            handled = on_event(static_cast<EncoderEvent &>(event));
+            break;
+        case PROXIMITY_EVENT:
+            handled = on_event(static_cast<ProximityEvent &>(event));
+            break;
         case START_EVENT:
             handled = on_event(static_cast<StartButtonEvent &>(event));
             break;
         case TIMER_EVENT:
             handled = on_event(static_cast<TimerEvent &>(event));
             break;
-        case BOUNDARY_AHEAD_EVENT:
-            handled = on_event(static_cast<BoundaryAheadEvent &>(event));
-            break;
-        case BOUNDARY_LEFT_EVENT:
-            handled = on_event(static_cast<BoundaryLeftEvent &>(event));
-            break;
-        case BOUNDARY_RIGHT_EVENT:
-            handled = on_event(static_cast<BoundaryRightEvent &>(event));
-            break;
-        case ENCODER_EVENT:
-            handled = on_event(static_cast<EncoderEvent &>(event));
-            break;
         default:
             break;
     }
     return handled;
+}
+
+bool RobotState::on_event(BoundaryEvent & event)
+{ 
+    return false; 
+}
+
+bool RobotState::on_event(EncoderEvent & event)
+{
+    return false;
+}
+
+bool RobotState::on_event(ProximityEvent & event)
+{
+    return false;
 }
 
 bool RobotState::on_event(StartButtonEvent & event)
@@ -58,24 +70,4 @@ bool RobotState::on_event(StartButtonEvent & event)
 bool RobotState::on_event(TimerEvent & event)
 { 
     return false; 
-}
-
-bool RobotState::on_event(BoundaryAheadEvent & event)
-{ 
-    return false; 
-}
-
-bool RobotState::on_event(BoundaryLeftEvent & event)
-{ 
-    return false; 
-}
-
-bool RobotState::on_event(BoundaryRightEvent & event)
-{ 
-    return false; 
-}
-
-bool RobotState::on_event(EncoderEvent & event)
-{
-    return false;
 }
